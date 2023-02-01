@@ -4,7 +4,9 @@
 )]
 
 mod jellyfin;
-use std::error::Error;
+mod database;
+use std::{error::Error, io};
+use database::{SavedUser, get_user};
 use rusqlite::{Connection, Result};
 
 #[derive(Debug)]
@@ -21,83 +23,16 @@ async fn greet(name: &str, password: &str) -> Result<String, String> {
 	
 }
 
+#[tauri::command]
+async fn get_saved_user() -> String {
+	let user = get_user().unwrap();
+
+	format!("{:?}", user)
+}
+
 fn main() {
 	tauri::Builder::default()
-		.invoke_handler(tauri::generate_handler![greet])
+		.invoke_handler(tauri::generate_handler![greet, get_saved_user])
 		.run(tauri::generate_context!())
-		.expect("error while running tauri application");
-	
-	let conn = Connection::open_in_memory();
-	match conn {
-		Ok(conn) => {
-			println!("Connection established");
-			match get_database_items(conn){
-				Ok(_) => println!("Inserted"),
-				Err(_) => println!("Error inserting")
-			}
-		},
-		Err(_) => println!("Error establishing connection")
-	}
-	;
-}
-
-
-fn get_database_items(conn: Connection) -> Result<(), ()> {
-
-	match conn.execute(
-		"CREATE TABLE if not exists person (
-			id    INTEGER PRIMARY KEY,
-			name  TEXT NOT NULL,
-			data  BLOB
-		)",
-		(), // empty list of parameters.
-	) {
-		Ok(_) => println!("Created table"),
-		Err(_) => println!("Error creating table")
-	}
-
-	let mut stmt = conn.prepare("SELECT id, name, data FROM person");
-
-	match stmt {
-		Ok(mut stmt) => {
-			match stmt.query_map([], |row| {
-				Ok(Person {
-					id: row.get(0)?,
-					name: row.get(1)?,
-					data: row.get(2)?,
-				})
-			}) {
-				Ok(person_iter) => {
-					for person in person_iter {
-						println!("Found person {:?}", person.unwrap());
-					}
-					Ok(())
-				},
-				Err(_) => {
-					println!("No person found");
-					Err(())
-				}
-			}
-		},
-		Err(_) => {
-			println!("Error preparing statement");
-			Err(())
-		}
-	}
-
-}
-
-fn insert(conn: Connection) -> Result<(), ()> {
-	let me = Person {
-		id: 0,
-		name: "Steven".to_string(),
-		data: None,
-	};
-	match conn.execute(
-		"INSERT INTO person (name, data) VALUES (?1, ?2)",
-		(&me.name, &me.data),
-	) {
-		Ok(_) => Ok(()),
-		Err(_) => Err(())
-	}
+		.expect("error while running tauri application");	
 }

@@ -13,23 +13,20 @@ function App() {
     setGreetMsg(await invoke("greet", { name: name(), password: password() }));
   }
 
+  const [databaseString, setDatabaseString] = createSignal("");
+  async function getDatabaseItems () {
+    invoke("get_saved_user").then((res) => {
+      console.log(res)
+     
+    }
+    ).catch((err) => {
+      console.log(err)
+      });
+  }
+
   return (
     <div class="container">
-      <h1>Welcome to Tauri!</h1>
-
-      <div class="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" class="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://solidjs.com" target="_blank">
-          <img src={logo} class="logo solid" alt="Solid logo" />
-        </a>
-      </div>
-
-      <p>Click on the Tauri, Vite, and Solid logos to learn more.</p>
+      <h1>Welcome to Rustyfin!</h1>
 
       <div class="row">
         <div>
@@ -50,7 +47,22 @@ function App() {
         </div>
       </div>
 
+      
+
       <p>{greetMsg}</p>
+
+
+      <div class="row">
+        <div>
+          <button type="button" onClick={() => getDatabaseItems()}>
+            Get Database Items
+          </button>
+        </div>
+      </div>
+
+      <p>
+        {databaseString}
+      </p>
     </div>
   );
 }
